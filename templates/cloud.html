@@ -75,36 +75,25 @@
 
     <div class="grid">
         {% for item in files %}
-        <article class="card{% if item.kind == 'folder' %} folder-card{% endif %}" data-media-card data-kind="{{ item.kind }}" data-name="{{ item.name }}" data-size="{{ item.size_mb or 0 }}">
+        <article class="card{% if item.kind == 'folder' %} folder-card{% endif %}" data-media-card data-kind="{{ item.kind }}" data-name="{{ item.name }}" data-size="{{ item.size_mb or 0 }}" tabindex="0" aria-label="{{ item.name }}，聚焦以查看操作">
             {% if item.kind == 'folder' %}
-            <a class="folder-card-link" href="{{ item.folder_url }}">
-                <div class="empty-thumbnail">{{ icon('folder') }}</div>
-                <div class="card-body">
-                    <h3 class="card-title" title="{{ item.name }}">{{ item.name }}</h3>
-                    <p class="card-meta">資料夾 {{ icon('arrow-right') }}</p>
-                </div>
-            </a>
+            <div class="card-visual empty-thumbnail" aria-hidden="true">{{ icon('folder') }}<div class="card-visual-caption"><span>FOLDER</span><span class="reveal-hint">開啟資料夾 {{ icon('arrow-right') }}</span></div></div>
+            <div class="card-body card__content"><span class="card-kicker">CLOUD DIRECTORY</span><h3 class="card-title" title="{{ item.name }}">{{ item.name }}</h3><p class="card-description">進入這個資料夾，瀏覽其中的媒體檔案。</p><div class="card-actions"><a class="button primary" href="{{ item.folder_url }}">開啟資料夾 {{ icon('arrow-right') }}</a></div></div>
             {% else %}
             {% if item.kind == 'video' %}
-            <div class="media-preview">
-                <video class="thumbnail" src="{{ item.stream_url }}"{% if item.assigned_thumbnail_url %} poster="{{ item.assigned_thumbnail_url }}"{% endif %} controls preload="metadata" aria-label="播放 {{ item.name }}"></video>
-            </div>
+            <div class="card-visual media-preview video-preview" aria-hidden="true">{% if item.assigned_thumbnail_url or item.thumb_url %}<img class="thumbnail" src="{{ item.assigned_thumbnail_url or item.thumb_url }}" alt="">{% else %}<div class="media-placeholder">{{ icon('video') }}</div>{% endif %}<div class="card-visual-caption"><span>VIDEO</span><span class="reveal-hint">查看內容 {{ icon('arrow-right') }}</span></div></div>
             {% elif item.kind == 'image' %}
-            <div class="media-preview">
-                <img class="thumbnail" src="{{ item.thumb_url or item.stream_url }}" alt="{{ item.name }}" loading="lazy">
-            </div>
+            <div class="card-visual media-preview" aria-hidden="true"><img class="thumbnail" src="{{ item.thumb_url or item.stream_url }}" alt="" loading="lazy"><div class="card-visual-caption"><span>IMAGE</span><span class="reveal-hint">查看內容 {{ icon('arrow-right') }}</span></div></div>
             {% elif item.kind == 'audio' %}
-            <div class="audio-preview">
-                {{ icon('music') }}
-                <audio class="audio-player" src="{{ item.stream_url }}" controls preload="none" aria-label="播放 {{ item.name }}"></audio>
-            </div>
+            <div class="card-visual audio-preview" aria-hidden="true">{{ icon('music') }}<div class="audio-wave"><i></i><i></i><i></i><i></i><i></i></div><div class="card-visual-caption"><span>AUDIO</span><span class="reveal-hint">開始聆聽 {{ icon('arrow-right') }}</span></div></div>
             {% endif %}
-            <div class="card-body">
+            <div class="card-body card__content">
                 <h3 class="card-title" title="{{ item.name }}">{{ item.name }}</h3>
                 <p class="card-meta">
                     <span class="media-kind">{% if item.kind == 'video' %}影片{% elif item.kind == 'image' %}圖片{% elif item.kind == 'audio' %}音樂{% else %}檔案{% endif %}</span>
                     <span>{{ item.size_mb }} MB</span>
                 </p>
+                {% if item.kind == 'video' %}<video class="card-player video-player" src="{{ item.stream_url }}"{% if item.assigned_thumbnail_url %} poster="{{ item.assigned_thumbnail_url }}"{% endif %} controls preload="metadata" aria-label="播放 {{ item.name }}"></video>{% elif item.kind == 'audio' %}<audio class="audio-player" src="{{ item.stream_url }}" controls preload="none" aria-label="播放 {{ item.name }}"></audio>{% elif item.kind == 'image' %}<p class="card-description">雲端圖片已就緒，可儲存至本機媒體庫。</p>{% endif %}
                 {% if item.kind == 'video' %}
                 <details class="media-settings">
                     <summary>{{ icon('settings') }} 縮圖設定 {{ icon('chevron-down') }}</summary>

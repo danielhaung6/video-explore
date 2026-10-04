@@ -40,11 +40,15 @@
             <div class="media-section-heading"><span class="section-icon">{{ icon('video') }}</span><h3 id="videos-title">影片</h3><span>{{ videos|length }}</span></div>
             <div class="grid">
                 {% for video in videos %}
-                <article class="card" data-media-card data-kind="video" data-name="{{ video.name }}">
-                    <div class="media-preview video-preview"><video class="thumbnail" src="/media/{{ video.name }}"{% if video.thumbnail %} poster="{{ video.thumbnail }}"{% endif %} controls preload="metadata" aria-label="播放 {{ video.name }}"></video></div>
-                    <div class="card-body">
+                <article class="card" data-media-card data-kind="video" data-name="{{ video.name }}" tabindex="0" aria-label="{{ video.name }}，聚焦以查看操作">
+                    <div class="card-visual media-preview video-preview" aria-hidden="true">
+                        {% if video.thumbnail %}<img class="thumbnail" src="{{ video.thumbnail }}" alt="">{% else %}<div class="media-placeholder">{{ icon('video') }}</div>{% endif %}
+                        <div class="card-visual-caption"><span>VIDEO</span><span class="reveal-hint">查看內容 {{ icon('arrow-right') }}</span></div>
+                    </div>
+                    <div class="card-body card__content">
                         <h3 class="card-title" title="{{ video.name }}">{{ video.name }}</h3>
                         <p class="card-meta"><span class="media-kind">影片</span><span>{{ video.size }} MB</span><span>{{ video.date }}</span></p>
+                        <video class="card-player video-player" src="/media/{{ video.name }}"{% if video.thumbnail %} poster="{{ video.thumbnail }}"{% endif %} controls preload="metadata" aria-label="播放 {{ video.name }}"></video>
                         <details class="media-settings"><summary>{{ icon('settings') }} 媒體設定 {{ icon('chevron-down') }}</summary><div class="settings-content">
                             <form class="bgm-form" action="/assign-thumbnail" method="post"><input type="hidden" name="video_name" value="{{ video.name }}"><label class="field-label" for="thumbnail-{{ loop.index }}">顯示縮圖</label><select class="field-control" id="thumbnail-{{ loop.index }}" name="thumbnail_name" data-autosubmit><option value="">自動或無縮圖</option>{% for image in images %}<option value="{{ image.name }}"{% if video.thumbnail_name == image.name %} selected{% endif %}>{{ image.name }}</option>{% endfor %}</select></form>
                             <form class="bgm-form" action="/assign-bgm" method="post"><input type="hidden" name="video_name" value="{{ video.name }}"><label class="field-label" for="bgm-{{ loop.index }}">背景音樂</label><select class="field-control" id="bgm-{{ loop.index }}" name="bgm_name" data-autosubmit><option value="">不指定</option>{% for music in musics %}<option value="{{ music.name }}"{% if video.bgm == music.name %} selected{% endif %}>{{ music.name }}</option>{% endfor %}</select></form>
@@ -62,9 +66,9 @@
             <div class="media-section-heading"><span class="section-icon">{{ icon('image') }}</span><h3 id="images-title">圖片</h3><span>{{ images|length }}</span></div>
             <div class="grid">
                 {% for image in images %}
-                <article class="card" data-media-card data-kind="image" data-name="{{ image.name }}">
-                    <a class="media-preview" href="{{ image.url }}" target="_blank" rel="noopener" aria-label="開啟 {{ image.name }}"><img class="thumbnail" src="{{ image.url }}" alt="{{ image.name }}" loading="lazy"></a>
-                    <div class="card-body"><h3 class="card-title" title="{{ image.name }}">{{ image.name }}</h3><p class="card-meta"><span class="media-kind">圖片</span><span>{{ image.size }} MB</span></p><div class="card-actions"><a class="button secondary" href="{{ image.url }}" target="_blank" rel="noopener">{{ icon('external') }} 開啟檔案</a><form class="delete-form" action="/delete" method="post"><input type="hidden" name="filename" value="{{ image.name }}"><button class="button danger-ghost icon-only-mobile" type="submit">{{ icon('trash') }} <span data-submit-label>刪除</span></button></form></div></div>
+                <article class="card" data-media-card data-kind="image" data-name="{{ image.name }}" tabindex="0" aria-label="{{ image.name }}，聚焦以查看操作">
+                    <div class="card-visual media-preview" aria-hidden="true"><img class="thumbnail" src="{{ image.url }}" alt="" loading="lazy"><div class="card-visual-caption"><span>IMAGE</span><span class="reveal-hint">查看內容 {{ icon('arrow-right') }}</span></div></div>
+                    <div class="card-body card__content"><h3 class="card-title" title="{{ image.name }}">{{ image.name }}</h3><p class="card-meta"><span class="media-kind">圖片</span><span>{{ image.size }} MB</span></p><p class="card-description">在新分頁開啟原始圖片，或從本機媒體庫永久刪除。</p><div class="card-actions"><a class="button secondary" href="{{ image.url }}" target="_blank" rel="noopener">{{ icon('external') }} 開啟檔案</a><form class="delete-form" action="/delete" method="post"><input type="hidden" name="filename" value="{{ image.name }}"><button class="button danger-ghost icon-only-mobile" type="submit">{{ icon('trash') }} <span data-submit-label>刪除</span></button></form></div></div>
                 </article>
                 {% endfor %}
             </div>
@@ -76,9 +80,9 @@
             <div class="media-section-heading"><span class="section-icon">{{ icon('music') }}</span><h3 id="music-title">音樂</h3><span>{{ musics|length }}</span></div>
             <div class="grid">
                 {% for music in musics %}
-                <article class="card" data-media-card data-kind="audio" data-name="{{ music.name }}">
-                    <div class="audio-preview">{{ icon('music') }}<audio class="audio-player" controls src="{{ music.url }}" preload="none" aria-label="播放 {{ music.name }}"></audio></div>
-                    <div class="card-body"><h3 class="card-title" title="{{ music.name }}">{{ music.name }}</h3><p class="card-meta"><span class="media-kind">音樂</span><span>{{ music.size }} MB</span></p><div class="card-actions"><a class="button secondary" href="{{ music.url }}" target="_blank" rel="noopener">{{ icon('external') }} 開啟檔案</a><form class="delete-form" action="/delete" method="post"><input type="hidden" name="filename" value="{{ music.name }}"><button class="button danger-ghost icon-only-mobile" type="submit">{{ icon('trash') }} <span data-submit-label>刪除</span></button></form></div></div>
+                <article class="card" data-media-card data-kind="audio" data-name="{{ music.name }}" tabindex="0" aria-label="{{ music.name }}，聚焦以查看操作">
+                    <div class="card-visual audio-preview" aria-hidden="true">{{ icon('music') }}<div class="audio-wave"><i></i><i></i><i></i><i></i><i></i></div><div class="card-visual-caption"><span>AUDIO</span><span class="reveal-hint">開始聆聽 {{ icon('arrow-right') }}</span></div></div>
+                    <div class="card-body card__content"><h3 class="card-title" title="{{ music.name }}">{{ music.name }}</h3><p class="card-meta"><span class="media-kind">音樂</span><span>{{ music.size }} MB</span></p><audio class="audio-player" controls src="{{ music.url }}" preload="none" aria-label="播放 {{ music.name }}"></audio><div class="card-actions"><a class="button secondary" href="{{ music.url }}" target="_blank" rel="noopener">{{ icon('external') }} 開啟檔案</a><form class="delete-form" action="/delete" method="post"><input type="hidden" name="filename" value="{{ music.name }}"><button class="button danger-ghost icon-only-mobile" type="submit">{{ icon('trash') }} <span data-submit-label>刪除</span></button></form></div></div>
                 </article>
                 {% endfor %}
             </div>

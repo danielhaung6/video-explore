@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% set page = 'cloud' %}
+{% from 'components.html' import icon, upload_form %}
+
+{% block title %}雲端媒體 · Video Manager{% endblock %}
+{% block breadcrumb %}雲端媒體{% endblock %}
+
+{% block content %}
+<div class="page-heading">
+    <div>
+        <p class="eyebrow">CLOUD LIBRARY</p>
+        <h1>雲端媒體</h1>
+        <p class="page-description">瀏覽雲端檔案，或將喜歡的媒體儲存至本機。</p>
+    </div>
+    {% if active.configured and active.linked %}
+    <span class="count-badge">{{ files | length }} 個項目</span>
+    {% endif %}
+</div>
+
+<section class="panel" aria-label="雲端帳號">
+    <nav class="provider-tabs" aria-label="選擇雲端服務">
+        {% for p in providers %}
+        <a href="/cloud?provider={{ p.name }}" class="provider-tab{{ ' active' if p.name == active.name }}"{% if p.name == active.name %} aria-current="page"{% endif %}>
+            {{ icon('cloud') }}
+            <span>{{ p.display }}</span>
+            {% if p.linked %}<span class="connection-dot" role="img" aria-label="已連結"></span>{% endif %}
+        </a>
+        {% endfor %}
+    </nav>
+    {% if active.configured and active.linked %}
+    <div class="provider-actions">
+        <span class="card-meta">{{ icon('check') }} 已連結 {{ active.display }}</span>
+        <form method="post" action="/cloud/{{ active.name }}/logout" data-busy-label="中斷連結中…">
+            <button class="button secondary compact" type="submit">{{ icon('log-out') }} <span data-submit-label>中斷連結</span></button>
+        </form>
+    </div>
+    {% endif %}
+</section>
+
+{% if error and active.configured and active.linked %}
+<div class="notice error" role="alert">{{ error }}</div>
+{% endif %}
+
+{% if not active.configured %}
+<section class="empty-state panel">
+    <div class="empty-icon">{{ icon('settings') }}</div>
+    <h2>{{ active.display }} 尚未開放</h2>
+    <p>此雲端服務尚未完成設定。請聯絡管理員，或先使用本機媒體庫。</p>
+    <a class="button secondary" href="/">{{ icon('folder') }} 前往本機媒體庫</a>
+</section>
+{% elif not active.linked %}
+<section class="empty-state panel">
+    <div class="empty-icon">{{ icon('cloud') }}</div>
+    <h2>連結你的 {{ active.display }}</h2>
+    <p>連結帳號後，即可在這裡瀏覽、播放與上傳雲端媒體。</p>
+    <a class="button primary" href="/cloud/{{ active.name }}/auth">{{ icon('link') }} 連結 {{ active.display }} 帳號</a>
+</section>
+{% else %}
+{{ upload_form('/cloud/' ~ active.name ~ '/upload', active.display, folder) }}
+
+<section data-library aria-label="{{ active.display }} 檔案">
+    <div class="section-heading">
+        <h2>{% if folder %}目前資料夾{% else %}我的雲端檔案{% endif %} <span class="count-badge" data-result-count>{{ files | length }} 個項目</span></h2>
+        {% if folder %}
+        <a class="button secondary compact" href="/cloud?provider={{ active.name }}">{{ icon('arrow-left') }} 回到根目錄</a>
+        {% endif %}
+    </div>
+    {% if files %}
+    <div class="library-toolbar">
+        <label class="search-field" for="cloud-search">
+            {{ icon('search') }}
+            <input type="search" id="cloud-search" placeholder="搜尋此資料夾的檔案…" aria-label="搜尋此資料夾的檔案" data-library-search autocomplete="off">
+        </label>
+    </div>
+
+    <div class="grid">
+        {% for item in files %}
+        <article class="card{% if item.kind == 'folder' %} folder-card{% endif %}" data-media-card data-kind="{{ item.kind }}" data-name="{{ item.name }}" data-size="{{ item.size_mb or 0 }}">
+            {% if item.kind == 'folder' %}
+            <a class="folder-card-link" href="{{ item.folder_url }}">
+                <div class="empty-thumbnail">{{ icon('folder') }}</div>
+                <div class="card-body">
+                    <h3 class="card-title" title="{{ item.name }}">{{ item.name }}</h3>
+                    <p class="card-meta">資料夾 {{ icon('arrow-right') }}</p>
+                </div>
+            </a>
+            {% else %}
+            {% if item.kind == 'video' %}
+            <div class="media-preview">
+                <video class="thumbnail" src="{{ item.stream_url }}"{% if item.assigned_thumbnail_url %} poster="{{ item.assigned_thumbnail_url }}"{% endif %} controls preload="metadata" aria-label="播放 {{ item.name }}"></video>
+            </div>
+            {% elif item.kind == 'image' %}
+            <div class="media-preview">
+                <img class="thumbnail" src="{{ item.thumb_url or item.stream_url }}" alt="{{ item.name }}" loading="lazy">
+            </div>
+            {% elif item.kind == 'audio' %}
+            <div class="audio-preview">
+                {{ icon('music') }}
+                <audio class="audio-player" src="{{ item.stream_url }}" controls preload="none" aria-label="播放 {{ item.name }}"></audio>
+            </div>
+            {% endif %}
+            <div class="card-body">
+                <h3 class="card-title" title="{{ item.name }}">{{ item.name }}</h3>
+                <p class="card-meta">
+                    <span class="media-kind">{% if item.kind == 'video' %}影片{% elif item.kind == 'image' %}圖片{% elif item.kind == 'audio' %}音樂{% else %}檔案{% endif %}</span>
+                    <span>{{ item.size_mb }} MB</span>
+                </p>
+                {% if item.kind == 'video' %}
+                <details class="media-settings">
+                    <summary>{{ icon('settings') }} 縮圖設定 {{ icon('chevron-down') }}</summary>
+                    <form class="bgm-form" action="/cloud/{{ active.name }}/assign-thumbnail" method="post">
+                        <input type="hidden" name="video_id" value="{{ item.file_id }}">
+                        <input type="hidden" name="folder" value="{{ folder }}">
+                        <label class="field-label" for="thumbnail-{{ loop.index }}">選擇縮圖</label>
+                        <select class="field-control" id="thumbnail-{{ loop.index }}" name="thumbnail_id" data-autosubmit>
+                            <option value="">不使用縮圖</option>
+                            {% for image in cloud_images %}
+                            <option value="{{ image.file_id }}"{% if item.thumbnail_id == image.file_id %} selected{% endif %}>{{ image.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                </details>
+                {% endif %}
+                {% if item.can_save_to_media %}
+                <div class="card-actions">
+                    <form class="save-to-media-form" action="/cloud/{{ active.name }}/save-to-media" method="post" data-busy-label="儲存中…">
+                        <input type="hidden" name="file_id" value="{{ item.file_id }}">
+                        <input type="hidden" name="filename" value="{{ item.name }}">
+                        <input type="hidden" name="folder" value="{{ folder }}">
+                        <button class="button secondary" type="submit">{{ icon('download') }} <span data-submit-label>儲存到本機媒體庫</span></button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </article>
+        {% endfor %}
+    </div>
+    <div class="empty-state" data-no-results hidden>
+        <div class="empty-icon">{{ icon('search') }}</div>
+        <h3>找不到符合的檔案</h3>
+        <p>試試其他檔名，或清除搜尋查看所有項目。</p>
+        <button class="button secondary" type="button" data-clear-filters>清除搜尋</button>
+    </div>
+    {% elif not error %}
+    <div class="empty-state panel">
+        <div class="empty-icon">{{ icon('folder') }}</div>
+        <h3>這個資料夾還沒有媒體</h3>
+        <p>上傳影片、圖片或音樂，讓你的雲端媒體庫開始收錄。</p>
+    </div>
+    {% endif %}
+</section>
+{% endif %}
+{% endblock %}

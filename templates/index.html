@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% set page = 'local' %}
+{% from 'components.html' import icon, upload_form %}
+
+{% block title %}本機媒體 · Video Manager{% endblock %}
+
+{% block content %}
+{% set total = videos|length + images|length + musics|length %}
+<div class="page-heading">
+    <div><p class="eyebrow">LOCAL LIBRARY</p><h1>本機媒體</h1><p class="page-description">集中管理這台裝置上的影片、圖片與音樂。</p></div>
+    <span class="count-badge">{{ total }} 個項目</span>
+</div>
+
+{{ upload_form('/upload', '本機媒體庫', none) }}
+
+<details class="youtube-panel panel"{% if download_success or download_error %} open{% endif %}>
+    <summary>
+        <span class="panel-heading"><span class="panel-icon youtube">{{ icon('youtube') }}</span><span><strong>YouTube 下載</strong><small>貼上網址，將影片或音訊儲存到本機</small></span></span>
+        {{ icon('chevron-down') }}
+    </summary>
+    <div class="youtube-content">
+        <form class="youtube-form" action="/download-youtube" method="post" data-busy-label="下載中…">
+            <div class="field-group grow"><label class="field-label" for="youtube-url">YouTube 網址</label><input class="field-control" id="youtube-url" name="url" type="url" inputmode="url" autocomplete="url" placeholder="https://www.youtube.com/watch?v=…" required></div>
+            <fieldset class="format-picker"><legend class="field-label">下載格式</legend><div class="segmented-control"><label><input type="radio" name="media_type" value="mp4" checked><span>MP4 影片</span></label><label><input type="radio" name="media_type" value="mp3"><span>MP3 音訊</span></label></div></fieldset>
+            <button class="button secondary download-button" type="submit">{{ icon('download') }} <span data-submit-label>開始下載</span></button>
+        </form>
+        {% if download_success %}<div class="notice success" role="status">{{ icon('check') }} <span>{{ download_success }}</span></div>{% endif %}
+        {% if download_error %}<div class="notice error" role="alert">{{ icon('info') }} <span>{{ download_error }}</span></div>{% endif %}
+        <p class="support-text">請只下載你有權保存的內容。</p>
+    </div>
+</details>
+
+{% if total %}
+<section data-library aria-labelledby="library-title">
+    <div class="section-heading"><h2 id="library-title">媒體庫 <span class="count-badge" data-result-count>{{ total }} 個項目</span></h2></div>
+    <div class="library-toolbar"><label class="search-field" for="local-search">{{ icon('search') }}<input type="search" id="local-search" placeholder="搜尋檔名…" aria-label="搜尋本機媒體" data-library-search autocomplete="off"></label></div>
+    <div class="library-groups">
+        {% if videos %}
+        <section class="media-section" data-media-section aria-labelledby="videos-title">
+            <div class="media-section-heading"><span class="section-icon">{{ icon('video') }}</span><h3 id="videos-title">影片</h3><span>{{ videos|length }}</span></div>
+            <div class="grid">
+                {% for video in videos %}
+                <article class="card" data-media-card data-kind="video" data-name="{{ video.name }}">
+                    <div class="media-preview video-preview"><video class="thumbnail" src="/media/{{ video.name }}"{% if video.thumbnail %} poster="{{ video.thumbnail }}"{% endif %} controls preload="metadata" aria-label="播放 {{ video.name }}"></video></div>
+                    <div class="card-body">
+                        <h3 class="card-title" title="{{ video.name }}">{{ video.name }}</h3>
+                        <p class="card-meta"><span class="media-kind">影片</span><span>{{ video.size }} MB</span><span>{{ video.date }}</span></p>
+                        <details class="media-settings"><summary>{{ icon('settings') }} 媒體設定 {{ icon('chevron-down') }}</summary><div class="settings-content">
+                            <form class="bgm-form" action="/assign-thumbnail" method="post"><input type="hidden" name="video_name" value="{{ video.name }}"><label class="field-label" for="thumbnail-{{ loop.index }}">顯示縮圖</label><select class="field-control" id="thumbnail-{{ loop.index }}" name="thumbnail_name" data-autosubmit><option value="">自動或無縮圖</option>{% for image in images %}<option value="{{ image.name }}"{% if video.thumbnail_name == image.name %} selected{% endif %}>{{ image.name }}</option>{% endfor %}</select></form>
+                            <form class="bgm-form" action="/assign-bgm" method="post"><input type="hidden" name="video_name" value="{{ video.name }}"><label class="field-label" for="bgm-{{ loop.index }}">背景音樂</label><select class="field-control" id="bgm-{{ loop.index }}" name="bgm_name" data-autosubmit><option value="">不指定</option>{% for music in musics %}<option value="{{ music.name }}"{% if video.bgm == music.name %} selected{% endif %}>{{ music.name }}</option>{% endfor %}</select></form>
+                        </div></details>
+                        <div class="card-actions"><a class="button secondary" href="/media/{{ video.name }}" target="_blank" rel="noopener">{{ icon('external') }} 開啟檔案</a><form class="delete-form" action="/delete" method="post"><input type="hidden" name="filename" value="{{ video.name }}"><button class="button danger-ghost icon-only-mobile" type="submit">{{ icon('trash') }} <span data-submit-label>刪除</span></button></form></div>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        {% if images %}
+        <section class="media-section" data-media-section aria-labelledby="images-title">
+            <div class="media-section-heading"><span class="section-icon">{{ icon('image') }}</span><h3 id="images-title">圖片</h3><span>{{ images|length }}</span></div>
+            <div class="grid">
+                {% for image in images %}
+                <article class="card" data-media-card data-kind="image" data-name="{{ image.name }}">
+                    <a class="media-preview" href="{{ image.url }}" target="_blank" rel="noopener" aria-label="開啟 {{ image.name }}"><img class="thumbnail" src="{{ image.url }}" alt="{{ image.name }}" loading="lazy"></a>
+                    <div class="card-body"><h3 class="card-title" title="{{ image.name }}">{{ image.name }}</h3><p class="card-meta"><span class="media-kind">圖片</span><span>{{ image.size }} MB</span></p><div class="card-actions"><a class="button secondary" href="{{ image.url }}" target="_blank" rel="noopener">{{ icon('external') }} 開啟檔案</a><form class="delete-form" action="/delete" method="post"><input type="hidden" name="filename" value="{{ image.name }}"><button class="button danger-ghost icon-only-mobile" type="submit">{{ icon('trash') }} <span data-submit-label>刪除</span></button></form></div></div>
+                </article>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        {% if musics %}
+        <section class="media-section" data-media-section aria-labelledby="music-title">
+            <div class="media-section-heading"><span class="section-icon">{{ icon('music') }}</span><h3 id="music-title">音樂</h3><span>{{ musics|length }}</span></div>
+            <div class="grid">
+                {% for music in musics %}
+                <article class="card" data-media-card data-kind="audio" data-name="{{ music.name }}">
+                    <div class="audio-preview">{{ icon('music') }}<audio class="audio-player" controls src="{{ music.url }}" preload="none" aria-label="播放 {{ music.name }}"></audio></div>
+                    <div class="card-body"><h3 class="card-title" title="{{ music.name }}">{{ music.name }}</h3><p class="card-meta"><span class="media-kind">音樂</span><span>{{ music.size }} MB</span></p><div class="card-actions"><a class="button secondary" href="{{ music.url }}" target="_blank" rel="noopener">{{ icon('external') }} 開啟檔案</a><form class="delete-form" action="/delete" method="post"><input type="hidden" name="filename" value="{{ music.name }}"><button class="button danger-ghost icon-only-mobile" type="submit">{{ icon('trash') }} <span data-submit-label>刪除</span></button></form></div></div>
+                </article>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+    </div>
+    <div class="empty-state" data-no-results hidden><div class="empty-icon">{{ icon('search') }}</div><h3>找不到符合的檔案</h3><p>試試其他檔名，或清除搜尋查看所有項目。</p><button class="button secondary" type="button" data-clear-filters>清除搜尋</button></div>
+</section>
+{% else %}
+<section class="empty-state panel"><div class="empty-icon">{{ icon('folder') }}</div><h2>媒體庫還是空的</h2><p>從上方選擇檔案上傳，影片、圖片與音樂就會出現在這裡。</p></section>
+{% endif %}
+{% endblock %}

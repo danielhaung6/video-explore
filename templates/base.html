@@ -1,3 +1,4 @@
+{% from 'components.html' import theme_switch %}
 <!doctype html>
 <html lang="zh-Hant">
 <head>
@@ -6,8 +7,8 @@
     <meta name="color-scheme" content="light dark">
     <title>{% block title %}Video Manager{% endblock %}</title>
     <script src="/templates/theme.js?v=20260908-2"></script>
-    <link rel="stylesheet" href="/templates/style.css?v=20261004-1">
-    <script src="/templates/app.js?v=20260913-1" defer></script>
+    <link rel="stylesheet" href="/templates/style.css?v=20261004-4">
+    <script src="/templates/app.js?v=20261004-3" defer></script>
 </head>
 <body>
     <a class="skip-link" href="#main-content">跳到主要內容</a>
@@ -28,18 +29,12 @@
                 </a>
             </nav>
             <div class="sidebar-footer">
-                <button class="theme-toggle" type="button" data-theme-toggle aria-label="切換顯示主題">
-                    <svg class="theme-icon-light" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8m0-6h1v3h-2V2zm0 17h1v3h-2v-3zM2 11h3v2H2zm17 0h3v2h-3zM4.22 5.64l1.42-1.42 2.12 2.12-1.42 1.42zm12.02 12.02 1.42-1.42 2.12 2.12-1.42 1.42zM4.22 18.36l2.12-2.12 1.42 1.42-2.12 2.12zM16.24 6.34l2.12-2.12 1.42 1.42-2.12 2.12z"/></svg>
-                    <svg class="theme-icon-dark" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 15.3A8.5 8.5 0 0 1 8.7 3.5 9 9 0 1 0 20.5 15.3"/></svg>
-                    <span data-theme-label>深色模式</span>
-                </button>
+                {{ theme_switch('theme') }}
             </div>
         </aside>
         <header class="mobile-header">
             <a class="brand compact" href="/" aria-label="Video Manager 首頁"><span class="brand-mark" aria-hidden="true">VM</span><strong>Video Manager</strong></a>
-            <button class="icon-button" type="button" data-theme-toggle aria-label="切換顯示主題">
-                <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2m0 18V4a8 8 0 0 1 0 16"/></svg><span class="sr-only" data-theme-label>深色模式</span>
-            </button>
+            {{ theme_switch('theme-mobile') }}
         </header>
         <main id="main-content" class="main-content" tabindex="-1"><div class="content-container">{% block content %}{% endblock %}<footer class="site-footer"><span>VIDEO MANAGER</span><span>LOCAL × CLOUD</span></footer></div></main>
         <nav class="mobile-nav" aria-label="行動版主要導覽">

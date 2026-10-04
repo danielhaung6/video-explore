@@ -22,23 +22,96 @@
         });
     }, { once: true });
 
-    function updateThemeButtons() {
+    function updateThemeSwitches() {
         const dark = document.documentElement.dataset.theme === "dark";
-        document.querySelectorAll("[data-theme-toggle]").forEach(function (button) {
-            const label = button.querySelector("[data-theme-label]");
-            if (label) label.textContent = dark ? "亮色模式" : "深色模式";
-            button.setAttribute("aria-pressed", String(dark));
+        document.querySelectorAll("[data-theme-toggle]").forEach(function (toggle) {
+            toggle.checked = dark;
         });
     }
-    document.querySelectorAll("[data-theme-toggle]").forEach(function (button) {
-        button.addEventListener("click", function () {
-            const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+    document.querySelectorAll("[data-theme-toggle]").forEach(function (toggle) {
+        toggle.addEventListener("change", function () {
+            const next = toggle.checked ? "dark" : "light";
             document.documentElement.dataset.theme = next;
             try { localStorage.setItem("video-manager-theme", next); } catch (error) {}
-            updateThemeButtons();
+            updateThemeSwitches();
         });
     });
-    updateThemeButtons();
+    updateThemeSwitches();
+
+    const cardHoverActions = new Map();
+    let hoveredCard = null;
+    document.addEventListener("pointermove", function (event) {
+        if (event.pointerType !== "mouse") return;
+        const next = event.target.closest("[data-media-card]");
+        if (next === hoveredCard) return;
+        if (cardHoverActions.has(hoveredCard)) cardHoverActions.get(hoveredCard).leave();
+        hoveredCard = next;
+        if (cardHoverActions.has(hoveredCard)) cardHoverActions.get(hoveredCard).enter();
+    });
+
+    document.querySelectorAll("[data-media-card]").forEach(function (card) {
+        const content = card.querySelector(".card__content");
+        const visual = card.querySelector(".card-visual");
+        if (!content || !visual) return;
+
+        const name = card.dataset.name || "媒體";
+        const back = document.createElement("button");
+        back.type = "button";
+        back.className = "button secondary card-flip-back";
+        back.textContent = "返回封面";
+        content.prepend(back);
+        let suppressFocus = false;
+        let dismissHover = false;
+        let revealed = null;
+
+        function reveal(open) {
+            if (revealed === open) return;
+            revealed = open;
+            card.classList.toggle("is-revealed", open);
+            content.inert = !open;
+            content.setAttribute("aria-hidden", String(!open));
+            card.setAttribute("aria-label", name + (open ? "，按 Escape 返回封面" : "，點擊或按 Enter 查看操作"));
+        }
+
+        function close() {
+            // Keep keyboard focus on the card without immediately opening it again.
+            dismissHover = hoveredCard === card;
+            suppressFocus = true;
+            card.focus({ preventScroll: true });
+            suppressFocus = false;
+            reveal(false);
+        }
+
+        cardHoverActions.set(card, {
+            enter: function () { if (!dismissHover) reveal(true); },
+            leave: function () {
+                dismissHover = false;
+                if (!card.contains(document.activeElement)) reveal(false);
+            }
+        });
+        card.addEventListener("focusin", function () {
+            if (!suppressFocus) reveal(true);
+        });
+        card.addEventListener("focusout", function (event) {
+            if (!card.contains(event.relatedTarget)) reveal(false);
+        });
+        card.addEventListener("click", function (event) {
+            if (event.target === card || visual.contains(event.target)) reveal(true);
+        });
+        card.addEventListener("keydown", function (event) {
+            if (event.key === "Escape") {
+                event.preventDefault();
+                close();
+            } else if (event.target === card && (event.key === "Enter" || event.key === " ")) {
+                event.preventDefault();
+                reveal(true);
+                back.focus({ preventScroll: true });
+            }
+        });
+        back.addEventListener("click", close);
+        reveal(false);
+        card.dataset.flipReady = "";
+    });
 
     document.querySelectorAll("[data-file-input]").forEach(function (input) {
         input.addEventListener("change", function () {

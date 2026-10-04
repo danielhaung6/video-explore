@@ -33,3 +33,18 @@
     <p class="support-text">支援 MP4、MOV、MKV、JPG、PNG、WEBP 與 MP3，可一次選擇多個檔案。</p>
 </section>
 {%- endmacro %}
+
+
+{% macro theme_switch(id) -%}
+<label for="{{ id }}" class="theme">
+    <span class="theme__toggle-wrap">
+        <input id="{{ id }}" class="theme__toggle" type="checkbox" role="switch" name="theme" value="dark" aria-label="深色模式" data-theme-toggle>
+        <span class="theme__fill" aria-hidden="true"></span>
+        <span class="theme__icon" aria-hidden="true">
+            {% for part in range(9) %}
+            <span class="theme__icon-part"></span>
+            {% endfor %}
+        </span>
+    </span>
+</label>
+{%- endmacro %}

@@ -40,6 +40,25 @@
     });
     updateThemeButtons();
 
+    const motionButton = document.querySelector("[data-motion-toggle]");
+    if (motionButton) {
+        let motionEnabled = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        try {
+            const savedMotion = localStorage.getItem("video-manager-motion");
+            if (savedMotion !== null) motionEnabled = savedMotion === "on";
+        } catch (error) {}
+        function updateMotion() {
+            document.documentElement.dataset.motion = motionEnabled ? "on" : "off";
+            motionButton.setAttribute("aria-pressed", String(motionEnabled));
+        }
+        motionButton.addEventListener("click", function () {
+            motionEnabled = !motionEnabled;
+            try { localStorage.setItem("video-manager-motion", motionEnabled ? "on" : "off"); } catch (error) {}
+            updateMotion();
+        });
+        updateMotion();
+    }
+
     document.querySelectorAll("[data-file-input]").forEach(function (input) {
         input.addEventListener("change", function () {
             const label = input.closest(".file-picker").querySelector("[data-file-label]");
